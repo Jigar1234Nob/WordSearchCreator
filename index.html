@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 20px;
+        }
+        input[type="text"] {
+            margin: 5px;
+            padding: 10px;
+            width: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #grid {
+            margin-top: 20px;
+            white-space: pre;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Word Search Generator</h1>
+    <div>
+        <input type="text" id="wordInput" placeholder="Enter a word" />
+        <button id="addWordButton">Add Word</button>
+        <button id="generateButton">Generate Word Search</button>
+    </div>
+    <h2>Words: <span id="wordList"></span></h2>
+    <pre id="grid"></pre>
+    <button id="saveButton">Save as Text File</button>
+
+    <script>
+        let words = [];
+
+        document.getElementById('addWordButton').addEventListener('click', function() {
+            const input = document.getElementById('wordInput');
+            const word = input.value.trim();
+            if (word) {
+                words.push(word);
+                document.getElementById('wordList').innerText = words.join(', ');
+                input.value = '';
+            }
+        });
+
+        document.getElementById('generateButton').addEventListener('click', function() {
+            const gridSize = 10; // 10x10 grid
+            const grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(' '));
+
+            // Function to place words in the grid
+            function placeWord(word) {
+                const directions = [
+                    { x: 1, y: 0 }, // Horizontal
+                    { x: 0, y: 1 }, // Vertical
+                    { x: 1, y: 1 }, // Diagonal down-right
+                    { x: 1, y: -1 } // Diagonal up-right
+                ];
+
+                const direction = directions[Math.floor(Math.random() * directions.length)];
+                const wordLength = word.length;
+                let placed = false;
+
+                while (!placed) {
+                    const startX = Math.floor(Math.random() * gridSize);
+                    const startY = Math.floor(Math.random() * gridSize);
+                    let endX = startX + direction.x * (wordLength - 1);
+                    let endY = startY + direction.y * (wordLength - 1);
+
+                    if (endX < gridSize && endY < gridSize && endX >= 0 && endY >= 0) {
+                        let canPlace = true;
+                        for (let i = 0; i < wordLength; i++) {
+                            if (grid[startY + i * direction.y][startX + i * direction.x] !== ' ') {
+                                canPlace = false;
+                                break;
+                            }
+                        }
+
+                        if (canPlace) {
+                            for (let i = 0; i < wordLength; i++) {
+                                grid[startY + i * direction.y][startX + i * direction.x] = word[i];
+                            }
+                            placed = true;
+                        }
+                    }
+                }
+            }
+
+            // Place all words in the grid
+            words.forEach(word => placeWord(word));
+
+            // Fill empty spaces with random letters
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === ' ') {
+                        grid[i][j] = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
+                    }
+                }
+            }
+
+            // Display the grid
+            document.getElementById('grid').innerText = grid.map(row => row.join(' ')).join('\n');
+        });
+
+        document.getElementById('saveButton').addEventListener('click', function() {
+            const blob = new Blob([document.getElementById('grid').innerText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'word_search.txt';
+            link.click();
+        });
+    </script>
+
+</body>
+</html>
